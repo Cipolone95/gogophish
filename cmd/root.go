@@ -1,51 +1,67 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
-*/
 package cmd
 
 import (
+	"fmt"
 	"os"
 
+	"github.com/cipolone95/gogophish/internal/gophish"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
+var cfgFile string
 
-
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "gogophish",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Short: "CLI tool for managing GoPhish campaigns",
+	Long:  `gogophish lets you list, copy, and delete GoPhish campaigns from the command line.`,
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
+	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	cobra.OnInitialize(initConfig)
 
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gogophish.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default $HOME/.gogophish.yaml)")
+	rootCmd.PersistentFlags().String("url", "", "GoPhish server URL (e.g. https://localhost:3333)")
+	rootCmd.PersistentFlags().String("api-key", "", "GoPhish API key")
+	rootCmd.PersistentFlags().Bool("insecure", false, "skip TLS certificate verification")
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	viper.BindPFlag("url", rootCmd.PersistentFlags().Lookup("url"))         //nolint:errcheck
+	viper.BindPFlag("api_key", rootCmd.PersistentFlags().Lookup("api-key")) //nolint:errcheck
+	viper.BindPFlag("insecure", rootCmd.PersistentFlags().Lookup("insecure")) //nolint:errcheck
 }
 
+func initConfig() {
+	if cfgFile != "" {
+		viper.SetConfigFile(cfgFile)
+	} else {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		viper.AddConfigPath(home)
+		viper.SetConfigName(".gogophish")
+		viper.SetConfigType("yaml")
+	}
+	viper.ReadInConfig() //nolint:errcheck
+}
 
+func newClient() (*gophish.Client, error) {
+	serverURL := viper.GetString("url")
+	apiKey := viper.GetString("api_key")
+	insecure := viper.GetBool("insecure")
+
+	if serverURL == "" {
+		return nil, fmt.Errorf("GoPhish URL not set — use --url flag or set 'url' in ~/.gogophish.yaml")
+	}
+	if apiKey == "" {
+		return nil, fmt.Errorf("GoPhish API key not set — use --api-key flag or set 'api_key' in ~/.gogophish.yaml")
+	}
+	return gophish.NewClient(serverURL, apiKey, insecure), nil
+}
