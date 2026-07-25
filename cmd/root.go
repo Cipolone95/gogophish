@@ -26,7 +26,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default $HOME/.gogophish.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default ./.gogophish.yaml)")
 	rootCmd.PersistentFlags().String("url", "", "GoPhish server URL (e.g. https://localhost:3333)")
 	rootCmd.PersistentFlags().String("api-key", "", "GoPhish API key")
 	rootCmd.PersistentFlags().Bool("insecure", false, "skip TLS certificate verification")
@@ -40,12 +40,7 @@ func initConfig() {
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	} else {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		viper.AddConfigPath(home)
+		viper.AddConfigPath(".")
 		viper.SetConfigName(".gogophish")
 		viper.SetConfigType("yaml")
 	}
@@ -58,10 +53,10 @@ func newClient() (*gophish.Client, error) {
 	insecure := viper.GetBool("insecure")
 
 	if serverURL == "" {
-		return nil, fmt.Errorf("GoPhish URL not set — use --url flag or set 'url' in ~/.gogophish.yaml")
+		return nil, fmt.Errorf("GoPhish URL not set — use --url flag or set 'url' in .gogophish.yaml")
 	}
 	if apiKey == "" {
-		return nil, fmt.Errorf("GoPhish API key not set — use --api-key flag or set 'api_key' in ~/.gogophish.yaml")
+		return nil, fmt.Errorf("GoPhish API key not set — use --api-key flag or set 'api_key' in .gogophish.yaml")
 	}
 	return gophish.NewClient(serverURL, apiKey, insecure), nil
 }

@@ -1,0 +1,12 @@
+# gogophish config files (contain API keys/URLs)
+.gogophish.yaml
+*.gogophish.yaml
+
+# Go build artifacts
+/gogophish
+*.exe
+*.test
+*.out
+
+# Editor/OS cruft
+.DS_Store
