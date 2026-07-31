@@ -78,32 +78,51 @@ func init() {
 
 // matchCampaigns resolves a numeric ID, wildcard pattern, or exact name against the campaign list.
 func matchCampaigns(campaigns []gophish.Campaign, arg string) ([]gophish.Campaign, error) {
+	idx, err := matchByIDOrName(len(campaigns), func(i int) (int64, string) {
+		return campaigns[i].ID, campaigns[i].Name
+	}, arg)
+	if err != nil {
+		return nil, err
+	}
+	matches := make([]gophish.Campaign, len(idx))
+	for i, j := range idx {
+		matches[i] = campaigns[j]
+	}
+	return matches, nil
+}
+
+// matchByIDOrName resolves a numeric ID, wildcard pattern, or exact name against a
+// collection of n items, using get(i) to read each item's ID and name. It returns
+// the indices of matching items.
+func matchByIDOrName(n int, get func(i int) (id int64, name string), arg string) ([]int, error) {
 	if id, err := strconv.ParseInt(arg, 10, 64); err == nil {
-		for _, c := range campaigns {
-			if c.ID == id {
-				return []gophish.Campaign{c}, nil
+		for i := 0; i < n; i++ {
+			if itemID, _ := get(i); itemID == id {
+				return []int{i}, nil
 			}
 		}
 		return nil, nil
 	}
 
 	if strings.ContainsAny(arg, "*?[") {
-		var matches []gophish.Campaign
-		for _, c := range campaigns {
-			ok, err := path.Match(arg, c.Name)
+		var matches []int
+		for i := 0; i < n; i++ {
+			_, name := get(i)
+			ok, err := path.Match(arg, name)
 			if err != nil {
 				return nil, fmt.Errorf("invalid pattern %q: %w", arg, err)
 			}
 			if ok {
-				matches = append(matches, c)
+				matches = append(matches, i)
 			}
 		}
 		return matches, nil
 	}
 
-	for _, c := range campaigns {
-		if c.Name == arg {
-			return []gophish.Campaign{c}, nil
+	for i := 0; i < n; i++ {
+		_, name := get(i)
+		if name == arg {
+			return []int{i}, nil
 		}
 	}
 	return nil, nil
