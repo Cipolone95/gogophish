@@ -12,6 +12,7 @@ import (
 
 var (
 	copyLaunchDate string
+	copySendByDate string
 	copyGroups     []string
 )
 
@@ -25,7 +26,11 @@ var campaignCopyCmd = &cobra.Command{
   # target multiple groups
 
   gogophish campaign copy example-email9 --group "Sales Team"
-  # creates example-email10`,
+  # creates example-email10
+
+  gogophish campaign copy example-email1 --group "Sales Team" \
+    --launch-date 2026-10-01T09:00:00-04:00 --send-by-date 2026-10-01T17:00:00-04:00
+  # schedule the launch and set a cutoff for when GoPhish should stop sending`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := newClient()
@@ -72,6 +77,9 @@ var campaignCopyCmd = &cobra.Command{
 			LaunchDate: launchDate,
 			Groups:     groups,
 		}
+		if copySendByDate != "" {
+			req.SendByDate = &copySendByDate
+		}
 
 		created, err := client.CreateCampaign(req)
 		if err != nil {
@@ -87,6 +95,7 @@ var campaignCopyCmd = &cobra.Command{
 func init() {
 	campaignCmd.AddCommand(campaignCopyCmd)
 	campaignCopyCmd.Flags().StringVar(&copyLaunchDate, "launch-date", "", "schedule launch in RFC3339 format (default: now)")
+	campaignCopyCmd.Flags().StringVar(&copySendByDate, "send-by-date", "", "target completion time in RFC3339 format (optional)")
 	campaignCopyCmd.Flags().StringArrayVar(&copyGroups, "group", nil, "target group name (repeatable for multiple groups)")
 }
 
