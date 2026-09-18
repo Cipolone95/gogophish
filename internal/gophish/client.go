@@ -6,7 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -148,6 +151,21 @@ func (c *Client) CreateTemplate(t Template) (*Template, error) {
 	return &created, json.NewDecoder(resp.Body).Decode(&created)
 }
 
+func (c *Client) UpdateTemplate(t Template) (*Template, error) {
+	resp, err := c.do(http.MethodPut, fmt.Sprintf("/api/templates/%d", t.ID), t)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, apiError(resp)
+	}
+
+	var updated Template
+	return &updated, json.NewDecoder(resp.Body).Decode(&updated)
+}
+
 func (c *Client) DeleteTemplate(id int64) error {
 	resp, err := c.do(http.MethodDelete, fmt.Sprintf("/api/templates/%d", id), nil)
 	if err != nil {
@@ -225,6 +243,50 @@ func (c *Client) UpdateGroup(group Group) (*Group, error) {
 
 	var updated Group
 	return &updated, json.NewDecoder(resp.Body).Decode(&updated)
+}
+
+// ImportGroupCSV uploads a CSV file to GoPhish's bulk-import endpoint and
+// returns the targets GoPhish parsed from it. It does not create or modify
+// any group — the caller is responsible for that.
+func (c *Client) ImportGroupCSV(path string) ([]Target, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	var body bytes.Buffer
+	mw := multipart.NewWriter(&body)
+	part, err := mw.CreateFormFile("file", filepath.Base(path))
+	if err != nil {
+		return nil, err
+	}
+	if _, err := io.Copy(part, f); err != nil {
+		return nil, err
+	}
+	if err := mw.Close(); err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, c.baseURL+"/api/import/group", &body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", c.apiKey)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, apiError(resp)
+	}
+
+	var targets []Target
+	return targets, json.NewDecoder(resp.Body).Decode(&targets)
 }
 
 func (c *Client) DeleteGroup(id int64) error {
