@@ -74,7 +74,7 @@ type NameRef struct {
 type CreateCampaignRequest struct {
 	Name       string    `json:"name"`
 	Template   NameRef   `json:"template"`
-	URL        string    `json:"url"`
+	URL        string    `json:"url,omitempty"`
 	Page       *NameRef  `json:"page,omitempty"`
 	SMTP       NameRef   `json:"smtp"`
 	LaunchDate string    `json:"launch_date,omitempty"`

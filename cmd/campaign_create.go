@@ -41,9 +41,6 @@ var campaignCreateCmd = &cobra.Command{
 		if campaignCreateSMTP == "" {
 			return fmt.Errorf("--smtp is required")
 		}
-		if campaignCreatePhishURL == "" {
-			return fmt.Errorf("--phish-url is required")
-		}
 		if len(campaignCreateGroups) == 0 {
 			return fmt.Errorf("at least one --group is required")
 		}
@@ -94,7 +91,7 @@ func init() {
 	campaignCreateCmd.Flags().StringVar(&campaignCreateTemplate, "template", "", "email template name (required)")
 	campaignCreateCmd.Flags().StringVar(&campaignCreatePage, "page", "", "landing page name (optional; GoPhish may still require one server-side)")
 	campaignCreateCmd.Flags().StringVar(&campaignCreateSMTP, "smtp", "", "sending profile name (required)")
-	campaignCreateCmd.Flags().StringVar(&campaignCreatePhishURL, "phish-url", "", "phishing URL for tracking links & the landing page (required) — distinct from the CLI's --url connection flag")
+	campaignCreateCmd.Flags().StringVar(&campaignCreatePhishURL, "phish-url", "", "phishing URL for tracking links & the landing page (optional; GoPhish may still require one server-side) — distinct from the CLI's --url connection flag")
 	campaignCreateCmd.Flags().StringArrayVar(&campaignCreateGroups, "group", nil, "target group name (repeatable for multiple groups; at least one required)")
 	campaignCreateCmd.Flags().StringVar(&campaignCreateLaunchDate, "launch-date", "", "schedule launch in RFC3339 format (default: now)")
 	campaignCreateCmd.Flags().StringVar(&campaignCreateSendByDate, "send-by-date", "", "target completion time in RFC3339 format (optional)")
