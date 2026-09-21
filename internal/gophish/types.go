@@ -75,7 +75,7 @@ type CreateCampaignRequest struct {
 	Name       string    `json:"name"`
 	Template   NameRef   `json:"template"`
 	URL        string    `json:"url"`
-	Page       NameRef   `json:"page"`
+	Page       *NameRef  `json:"page,omitempty"`
 	SMTP       NameRef   `json:"smtp"`
 	LaunchDate string    `json:"launch_date,omitempty"`
 	SendByDate *string   `json:"send_by_date,omitempty"`

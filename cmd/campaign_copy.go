@@ -72,7 +72,7 @@ var campaignCopyCmd = &cobra.Command{
 			Name:       newName,
 			Template:   gophish.NameRef{Name: src.Template.Name},
 			URL:        src.URL,
-			Page:       gophish.NameRef{Name: src.Page.Name},
+			Page:       &gophish.NameRef{Name: src.Page.Name},
 			SMTP:       gophish.NameRef{Name: src.SMTP.Name},
 			LaunchDate: launchDate,
 			Groups:     groups,
