@@ -36,8 +36,21 @@ type Page struct {
 }
 
 type SMTP struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
+	ID               int64    `json:"id"`
+	Name             string   `json:"name"`
+	Username         string   `json:"username,omitempty"`
+	Password         string   `json:"password,omitempty"`
+	Host             string   `json:"host"`
+	InterfaceType    string   `json:"interface_type,omitempty"`
+	FromAddress      string   `json:"from_address"`
+	IgnoreCertErrors bool     `json:"ignore_cert_errors"`
+	ModifiedDate     string   `json:"modified_date,omitempty"`
+	Headers          []Header `json:"headers,omitempty"`
+}
+
+type Header struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 type Group struct {

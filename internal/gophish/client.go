@@ -302,6 +302,49 @@ func (c *Client) DeleteGroup(id int64) error {
 	return nil
 }
 
+func (c *Client) GetSMTPProfiles() ([]SMTP, error) {
+	resp, err := c.do(http.MethodGet, "/api/smtp/", nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, apiError(resp)
+	}
+
+	var profiles []SMTP
+	return profiles, json.NewDecoder(resp.Body).Decode(&profiles)
+}
+
+func (c *Client) CreateSMTPProfile(s SMTP) (*SMTP, error) {
+	resp, err := c.do(http.MethodPost, "/api/smtp/", s)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		return nil, apiError(resp)
+	}
+
+	var created SMTP
+	return &created, json.NewDecoder(resp.Body).Decode(&created)
+}
+
+func (c *Client) DeleteSMTPProfile(id int64) error {
+	resp, err := c.do(http.MethodDelete, fmt.Sprintf("/api/smtp/%d", id), nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return apiError(resp)
+	}
+	return nil
+}
+
 func apiError(resp *http.Response) error {
 	b, _ := io.ReadAll(resp.Body)
 	return fmt.Errorf("API error %s: %s", resp.Status, strings.TrimSpace(string(b)))
