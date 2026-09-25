@@ -54,22 +54,8 @@ var groupImportCmd = &cobra.Command{
 			group = &gophish.Group{Name: name}
 		}
 
-		added, skipped := 0, 0
-		for _, t := range imported {
-			duplicate := false
-			for _, existing := range group.Targets {
-				if existing.Email == t.Email {
-					duplicate = true
-					break
-				}
-			}
-			if duplicate {
-				skipped++
-				continue
-			}
-			group.Targets = append(group.Targets, t)
-			added++
-		}
+		merged, added, skipped := mergeTargets(group.Targets, imported)
+		group.Targets = merged
 
 		var result *gophish.Group
 		if isNew {
@@ -90,4 +76,28 @@ var groupImportCmd = &cobra.Command{
 func init() {
 	groupCmd.AddCommand(groupImportCmd)
 	groupImportCmd.Flags().StringVar(&groupImportFile, "file", "", "path to CSV file of targets (required)")
+}
+
+// mergeTargets appends any target from incoming whose email isn't already
+// present in existing, so re-importing the same CSV (or migrating a group
+// that already exists on the destination) doesn't create duplicate targets.
+// It returns the merged slice and counts of added vs. skipped duplicates.
+func mergeTargets(existing, incoming []gophish.Target) (merged []gophish.Target, added, skipped int) {
+	merged = existing
+	for _, t := range incoming {
+		duplicate := false
+		for _, e := range merged {
+			if e.Email == t.Email {
+				duplicate = true
+				break
+			}
+		}
+		if duplicate {
+			skipped++
+			continue
+		}
+		merged = append(merged, t)
+		added++
+	}
+	return merged, added, skipped
 }
