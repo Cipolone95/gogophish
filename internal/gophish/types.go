@@ -71,6 +71,28 @@ type NameRef struct {
 	Name string `json:"name"`
 }
 
+type Result struct {
+	ID           int64   `json:"id"`
+	Email        string  `json:"email"`
+	FirstName    string  `json:"first_name"`
+	LastName     string  `json:"last_name"`
+	Position     string  `json:"position"`
+	Status       string  `json:"status"`
+	IP           string  `json:"ip"`
+	Latitude     float64 `json:"latitude"`
+	Longitude    float64 `json:"longitude"`
+	SendDate     string  `json:"send_date"`
+	Reported     bool    `json:"reported"`
+	ModifiedDate string  `json:"modified_date"`
+}
+
+type CampaignResults struct {
+	ID      int64    `json:"id"`
+	Name    string   `json:"name"`
+	Status  string   `json:"status"`
+	Results []Result `json:"results"`
+}
+
 type CreateCampaignRequest struct {
 	Name       string    `json:"name"`
 	Template   NameRef   `json:"template"`

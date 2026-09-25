@@ -95,6 +95,21 @@ func (c *Client) CreateCampaign(req CreateCampaignRequest) (*Campaign, error) {
 	return &campaign, json.NewDecoder(resp.Body).Decode(&campaign)
 }
 
+func (c *Client) GetCampaignResults(id int64) (*CampaignResults, error) {
+	resp, err := c.do(http.MethodGet, fmt.Sprintf("/api/campaigns/%d/results", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, apiError(resp)
+	}
+
+	var results CampaignResults
+	return &results, json.NewDecoder(resp.Body).Decode(&results)
+}
+
 func (c *Client) DeleteCampaign(id int64) error {
 	resp, err := c.do(http.MethodDelete, fmt.Sprintf("/api/campaigns/%d", id), nil)
 	if err != nil {
