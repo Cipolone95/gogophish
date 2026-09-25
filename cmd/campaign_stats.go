@@ -9,7 +9,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var campaignStatsJSON bool
+var (
+	campaignStatsJSON   bool
+	campaignStatsStatus []string
+)
 
 // campaignStat is the curated id/email/status view of a campaign result —
 // GoPhish's own Result also carries name, position, ip, lat/long, send_date,
@@ -25,7 +28,13 @@ var campaignStatsCmd = &cobra.Command{
 	Short: "Show per-target results (ID, email, status) for a campaign",
 	Example: `  gogophish campaign stats example-email1
   gogophish campaign stats 42
-  gogophish campaign stats example-email1 --json`,
+  gogophish campaign stats example-email1 --json
+
+  # only show targets who clicked, in either format
+  gogophish campaign stats example-email1 --status "Clicked Link"
+
+  # multiple statuses (repeatable; matches any of them)
+  gogophish campaign stats example-email1 --status "Clicked Link" --status "Submitted Data"`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := newClient()
@@ -54,9 +63,17 @@ var campaignStatsCmd = &cobra.Command{
 			return err
 		}
 
-		stats := make([]campaignStat, len(results.Results))
-		for i, r := range results.Results {
-			stats[i] = campaignStat{ID: r.ID, Email: r.Email, Status: r.Status}
+		statusFilter := make(map[string]bool, len(campaignStatsStatus))
+		for _, s := range campaignStatsStatus {
+			statusFilter[s] = true
+		}
+
+		stats := []campaignStat{}
+		for _, r := range results.Results {
+			if len(statusFilter) > 0 && !statusFilter[r.Status] {
+				continue
+			}
+			stats = append(stats, campaignStat{ID: r.ID, Email: r.Email, Status: r.Status})
 		}
 
 		if campaignStatsJSON {
@@ -66,7 +83,11 @@ var campaignStatsCmd = &cobra.Command{
 		}
 
 		if len(stats) == 0 {
-			fmt.Println("No results found.")
+			if len(statusFilter) > 0 {
+				fmt.Println("No results matched the given --status filter.")
+			} else {
+				fmt.Println("No results found.")
+			}
 			return nil
 		}
 
@@ -82,4 +103,5 @@ var campaignStatsCmd = &cobra.Command{
 func init() {
 	campaignCmd.AddCommand(campaignStatsCmd)
 	campaignStatsCmd.Flags().BoolVar(&campaignStatsJSON, "json", false, "output as JSON instead of a table")
+	campaignStatsCmd.Flags().StringArrayVar(&campaignStatsStatus, "status", nil, `only show results with this exact status, e.g. "Email Sent", "Clicked Link" (repeatable; matches any of them; default: show all)`)
 }
