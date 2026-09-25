@@ -15,7 +15,7 @@ var campaignStatsJSON bool
 // GoPhish's own Result also carries name, position, ip, lat/long, send_date,
 // reported, and modified_date, but only these three were asked for.
 type campaignStat struct {
-	ID     int64  `json:"id"`
+	ID     string `json:"id"`
 	Email  string `json:"email"`
 	Status string `json:"status"`
 }
@@ -73,7 +73,7 @@ var campaignStatsCmd = &cobra.Command{
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 		fmt.Fprintln(w, "ID\tEMAIL\tSTATUS")
 		for _, s := range stats {
-			fmt.Fprintf(w, "%d\t%s\t%s\n", s.ID, s.Email, s.Status)
+			fmt.Fprintf(w, "%s\t%s\t%s\n", s.ID, s.Email, s.Status)
 		}
 		return w.Flush()
 	},

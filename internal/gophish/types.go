@@ -72,7 +72,7 @@ type NameRef struct {
 }
 
 type Result struct {
-	ID           int64   `json:"id"`
+	ID           string  `json:"id"` // GoPhish's per-recipient tracking token (used as ?rid= in tracking URLs), not a numeric ID
 	Email        string  `json:"email"`
 	FirstName    string  `json:"first_name"`
 	LastName     string  `json:"last_name"`
